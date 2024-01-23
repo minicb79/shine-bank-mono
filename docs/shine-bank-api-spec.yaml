@@ -1,0 +1,486 @@
+openapi: 3.0.3
+info:
+  title: Shine Bank
+  description: Shine Bank API description
+  version: 1.0.0
+servers:
+  - url: 'https://localhost:8080'
+paths:
+  /customers:
+    get:
+      description: Returns all customers in the system
+      responses:
+        '200':
+          description: A list of customers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+
+    post:
+      description: Creates a new Customer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              items:
+                $ref: '#/components/schemas/NewCustomer'
+      responses:
+        '201':
+          description: New Customer with Id populated
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Customer'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+
+  /customers/{id}:
+    get:
+      description: Returns all the details about a single customer with the id provided
+      responses:
+        '200':
+          description: Returns a single customer
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Customer'
+
+    put:
+      description: Update a customer's details
+      responses:
+        '200':
+          description: Updates a customer's details and returns the updated details
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Customer'
+
+
+  /customers/{id}/accounts:
+    get:
+      description: Returns a list of all accounts owned by the customer
+      responses:
+        '200':
+          description: The customer was found and they had some accounts associated with them
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+
+  /accounts:
+    post:
+      description: Create an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              items:
+                $ref: '#/components/schemas/Account'
+      responses:
+        '201':
+          description: The account was created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Account'
+
+  /accounts?accountNumber={accountNumber}:
+    get:
+      description: Search for an account number and return a list of accounts matching the account number
+      responses:
+        '200':
+          description: Accounts were found and returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+
+  /accounts/{accountNumber}:
+    get:
+      description: Get the details of a single account.
+      responses:
+        '200':
+          description: Account found and fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Account'
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+
+    put:
+      description: Update account details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              items:
+                $ref: '#/components/schemas/Account'
+      responses:
+        '200':
+          description: Update successful
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Account'
+
+  /transactions/transfer:
+    post:
+      description: Transfer money between two accounts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              items:
+                $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '200':
+          description: Transfer is successful.
+          content:
+            application/json:
+              schema:
+                description: Return the current user's updated account/balance details (the updated fromAccount details)
+                type: object
+                items:
+                  $ref: '#/components/schemas/Account'
+        '400':
+          description: Bad Request. This could range from account not found, to invalid funds.
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+
+  /transactions/deposit:
+    post:
+      description: Deposit an amount of money into an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              items:
+                $ref: '#/components/schemas/DepositRequest'
+      responses:
+        '200':
+          description: Deposit is successful.
+          content:
+            application/json:
+              schema:
+                description: Return the current user's updated account/balance details
+                type: object
+                items:
+                  $ref: '#/components/schemas/Account'
+        '400':
+          description: Bad Request. This could range from account not found, to invalid funds.
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+
+  /transactions/withdraw:
+    post:
+      description: Withdraw an amount of money from an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              items:
+                $ref: '#/components/schemas/WithdrawRequest'
+      responses:
+        '200':
+          description: Withdrawal is successful.
+          content:
+            application/json:
+              schema:
+                description: Return the current user's updated account/balance details
+                type: object
+                items:
+                  $ref: '#/components/schemas/Account'
+        '400':
+          description: Bad Request. This could range from account not found, to invalid funds.
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+        message:
+          type: string
+
+    NewCustomer:
+      type: object
+      properties:
+        name:
+          type: string
+        surname:
+          type: string
+        dob:
+          type: integer
+          format: int64
+          description: The number of milliseconds from the epoch in UTC
+        addressLine1:
+          type: string
+        addressLine2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        postcode:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+
+    Customer:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        surname:
+          type: string
+        dob:
+          type: integer
+          format: int64
+          description: The number of milliseconds from the epoch in UTC
+        addressLine1:
+          type: string
+        addressLine2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        postcode:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+
+    Account:
+      description: An abstract implementation from which all Accounts stem from. This includes SavingsAccounts, HomeLoans and CreditCards.
+      type: object
+      properties:
+        accountNumber:
+          type: integer
+          format: int32
+        bsb:
+          type: integer
+          format: int32
+        customer:
+          type: object
+          items:
+            $ref: '#/components/schemas/Customer'
+        dateOpened:
+          type: integer
+          format: int64
+          description: The number of milliseconds from the epoch in UTC
+        balance:
+          type: number
+
+    SavingsAccount:
+      type: object
+      properties:
+        accountNumber:
+          type: integer
+          format: int32
+        bsb:
+          type: integer
+          format: int32
+        customer:
+          type: object
+          items:
+            $ref: '#/components/schemas/Customer'
+        dateOpened:
+          type: integer
+          format: int64
+          description: The number of milliseconds from the epoch in UTC
+        balance:
+          type: number
+          format: double
+
+    HomeLoan:
+      type: object
+      properties:
+        accountNumber:
+          type: integer
+          format: int32
+        bsb:
+          type: integer
+          format: int32
+        customer:
+          type: object
+          items:
+            $ref: '#/components/schemas/Customer'
+        dateOpened:
+          type: integer
+          format: int64
+          description: The number of milliseconds from the epoch in UTC
+        loanAmount:
+          type: number
+          format: double
+        term:
+          type: string
+        scheduledCompletionDate:
+          type: integer
+          format: int64
+          description: The number of milliseconds from the epoch in UTC
+        interestRateAdjustment:
+          type: number
+          format: double
+        balance:
+          type: number
+          format: double
+        redrawBalance:
+          type: number
+          format: double
+
+    CreditCard:
+      type: object
+      properties:
+        accountNumber:
+          type: integer
+          format: in32
+        bsb:
+          type: integer
+          format: int32
+        customer:
+          type: object
+          items:
+            $ref: '#/components/schemas/Customer'
+        dateOpened:
+          type: integer
+          format: int64
+          description: The number of milliseconds from the epoch in UTC
+        creditLimit:
+          type: number
+          format: double
+        balance:
+          type: number
+          format: double
+
+    DepositRequest:
+      type: object
+      properties:
+        account:
+          type: object
+          items:
+            $ref: '#/components/schemas/Account'
+        amount:
+          type: object
+          items:
+            $ref: '#/components/schemas/MoneyValue'
+
+    WithdrawRequest:
+      type: object
+      properties:
+        toAccount:
+          type: object
+          items:
+            $ref: '#/components/schemas/Account'
+        amount:
+          type: object
+          items:
+            $ref: '#/components/schemas/MoneyValue'
+
+    TransferRequest:
+      type: object
+      properties:
+        fromAccount:
+          type: object
+          items:
+            $ref: '#/components/schemas/Account'
+        toAccount:
+          type: object
+          items:
+            $ref: '#/components/schemas/Account'
+        amount:
+          type: object
+          items:
+            $ref: '#/components/schemas/MoneyValue'
+
+    MoneyValue:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+
+  parameters:
+    id:
+      name: id
+      in: path
+      description: The customer id
+      required: true
+
+    accountStatus:
+      name: accountStatus
+      in: query
+      description: A flag to select open, closed or all accounts. Default is open.
+      required: false
+
+    accountNumber:
+      name: accountNumber
+      in: query
+      description: A full or partial account number to search for.
+      required: true
